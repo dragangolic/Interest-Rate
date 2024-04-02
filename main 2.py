@@ -1,9 +1,7 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QBoxLayout, QPushButton, QHBoxLayout, QTreeView, QLineEdit, \
-    QMainWindow, QVBoxLayout, QMessageBox, QFileDialog, QCheckBox
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QBoxLayout, QPushButton, QHBoxLayout, QTreeView, QLineEdit, QMainWindow, QVBoxLayout, QMessageBox
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-import os
 
 
 class FinanceApp(QMainWindow):
@@ -30,9 +28,6 @@ class FinanceApp(QMainWindow):
 
         self.calc_button = QPushButton("Calculate")
         self.clear_button = QPushButton("Clear")
-        self.save_button = QPushButton("Save")
-
-        self.dark_mode = QCheckBox("Dark Mode")
 
         #self.figure = QLabel("-- Chart will be here soon--")
         self.figure = plt.figure()
@@ -52,12 +47,10 @@ class FinanceApp(QMainWindow):
         self.row1.addWidget(self.initial_input)
         self.row1.addWidget(self.years_text)
         self.row1.addWidget(self.years_input)
-        self.row1.addWidget(self.dark_mode)
 
         self.col1.addWidget(self.tree_view)
         self.col1.addWidget(self.calc_button)
         self.col1.addWidget(self.clear_button)
-        self.col1.addWidget(self.save_button)
 
         #self.col2.addWidget(self.figure)
         self.col2.addWidget(self.canvas)
@@ -73,43 +66,6 @@ class FinanceApp(QMainWindow):
 
         self.calc_button.clicked.connect(self.calc_interest)
         self.clear_button.clicked.connect(self.reset)
-        self.save_button.clicked.connect(self.save_data)
-        self.dark_mode.stateChanged.connect(self.toggle_mode)
-        self.apply_style()
-
-    def apply_style(self):
-        self.setStyleSheet(
-            """
-            FinanceApp{
-                        background-color: #f0f0f0;
-                        }
-            QLabel, QLineEdit, QPushButton{
-                        background-color: #f8f8f8;
-                        }
-            QTreeView{
-                        background-color: #ffffff;
-                        }
-            """
-        )
-        if self.dark_mode.isChecked():
-            self.setStyleSheet(
-                """
-                            FinanceApp{
-                                        background-color: #222222;
-                                        }
-                            QLabel, QLineEdit, QPushButton{
-                                        background-color: #333333;
-                                        color: #eeeeee;
-                                        }
-                            QTreeView{
-                                        background-color: #444444;
-                                        color: #eeeeee
-                                        }
-                            """
-            )
-
-    def toggle_mode(self):
-        self.apply_style()
 
     def calc_interest(self):
         initial_investment = None
@@ -121,9 +77,6 @@ class FinanceApp(QMainWindow):
             QMessageBox.warning(self, "Error", "Invalid input, enter a number!")
             return
 
-        self.model.clear()
-        self.model.setHorizontalHeaderLabels(["Year", "Total"])
-
         total = initial_investment
         for year in range(1, num_years + 1):
             total += total * (interest_rate / 100)
@@ -133,7 +86,6 @@ class FinanceApp(QMainWindow):
 
         # Update my chart with the data
         self.figure.clear()
-        plt.style.use('seaborn')
         ax = self.figure.subplots()
         years = list(range(1, num_years + 1))
         totals = [initial_investment * (1 + interest_rate / 100) ** year for year in years]
@@ -144,27 +96,6 @@ class FinanceApp(QMainWindow):
         ax.set_ylabel("Total")
         self.canvas.draw()
 
-    def save_data(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Select Directory")
-        if dir_path:
-            folder_path = os.path.join(dir_path, "Saved")
-            os.makedirs(folder_path, exist_ok=True)
-
-            file_path = os.path.join(folder_path, "results.csv")
-            with open(file_path, "w") as file:
-                file.write("Year, Total\n")
-                for row in range(self.model.rowCount()):
-                    year = self.model.index(row, 0).data()
-                    total = self.model.index(row, 1).data()
-                    file.write("{},{}\n".format(year, total))
-
-            plt.savefig("chart.png")
-
-            QMessageBox.information(self, "Save Results", "Results are saved to your Folder!")
-        else:
-            QMessageBox.warning(self, "Save Results", "No directory selected")
-
-
     def reset(self):
         self.rate_input.clear()
         self.initial_input.clear()
@@ -172,9 +103,7 @@ class FinanceApp(QMainWindow):
         self.model.clear()
 
         self.figure.clear()
-        self.canvas.draw()
-
-
+        self.canvas.clear()
 
 
 
